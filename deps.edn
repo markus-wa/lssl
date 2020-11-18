@@ -1,0 +1,15 @@
+{:paths ["src" "resources"]
+ :deps
+ {lwjgl/lwjgl {:local/root "./lwjgl"}
+  org.clojure/tools.analyzer.jvm {:mvn/version "1.0.0"}}
+ :aliases
+ {:lwjgl/deps
+  {:extra-paths ["lwjgl/dev"]
+   :main-opts ["-m" "deps"]}
+  :dev
+  {:extra-paths ["dev"]}
+  :cider-nrepl ; required for MAC-OS
+  {:extra-paths ["dev"]
+   :main-opts ["-m" "cider-nrepl"]
+   :extra-deps
+   {cider/cider-nrepl {:mvn/version "0.25.4"}}}}}
