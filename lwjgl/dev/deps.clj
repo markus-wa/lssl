@@ -58,16 +58,10 @@
             (for [p LWJGL_PLATFORMS]
               (into prefix [(symbol LWJGL_NS (str m "$natives-" p)) {:mvn/version LWJGL_VERSION}]))))))
 
-(defn lwjgl-deps-with-natives []
+(def lwjgl-deps-with-natives
   (reduce #(apply assoc %1 (apply concat (module->deps %2))) {} LWJGL_MODULES))
-
-(def all-dependencies
-  (merge
-   '{org.clojure/clojure {:mvn/version "1.10.0"}
-     org.clojure/tools.analyzer.jvm {:mvn/version "1.0.0"}}
-   (lwjgl-deps-with-natives)))
 
 (defn -main
   [& args]
   (spit "lwjgl/deps.edn"
-        (with-out-str (ppt/pprint {:deps all-dependencies}))))
+        (with-out-str (ppt/pprint {:deps lwjgl-deps-with-natives}))))
