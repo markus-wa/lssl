@@ -317,6 +317,8 @@
 
 (comment
   (do
+    (require '[clojure.java.shell :as sh])
+
     (def lssl-src
       '[(defversion 460 core)
 
@@ -331,7 +333,10 @@
         (defun void main []
           (reset! FragColor (getx inputs color)))])
 
-    (spit "resources/shaders/lssl.frag.spv.asm"
-          (lsslc lssl-src)))
+    (let [out-file "resources/shaders/lssl.frag.spv.asm"]
+      (spit out-file
+            (lsslc lssl-src))
+
+      (sh/sh "spirv-as" out-file "-o" "resources/shaders/lssl.frag.spv")))
 
   )
