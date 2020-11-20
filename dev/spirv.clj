@@ -1,5 +1,6 @@
 (ns spirv
-  (:require [clojure.java.io :as io])
+  (:require [clojure.java.io :as io]
+            [opengl])
   (:import (java.io ByteArrayOutputStream)
            (java.nio ByteBuffer)
            (org.lwjgl BufferUtils)))
@@ -19,7 +20,7 @@
       (.put bytes)
       (.flip)))
 
-(def fragment-shader-bin (-> "shaders/test.frag.spv"
+(def fragment-shader-bin (-> "shaders/lssl.frag.spv"
                              io/resource
                              slurp-bytes
                              ->ByteBuffer))

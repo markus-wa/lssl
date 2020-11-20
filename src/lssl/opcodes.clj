@@ -208,30 +208,30 @@
                      :names
                      [(name :main "main")
                       (name :FragColor "FragColor")
-                      (name :OurUniforms "OurUniforms")
-                      (member-name :OurUniforms 0 "ourColor")
-                      (name :ourUniforms "ourUniforms")]}
+                      (name :Inputs "Inputs")
+                      (member-name :Inputs 0 "color")
+                      (name :inputs "inputs")]}
         :annotations [(decorate :FragColor 'Location 0)
-                      (member-decorate :OurUniforms 0 'Offset 0)
-                      (decorate :OurUniforms 'Block)
-                      (decorate :ourUniforms 'DescriptorSet 0)
-                      (decorate :ourUniforms 'Binding 0)]
+                      (member-decorate :Inputs 0 'Offset 0)
+                      (decorate :Inputs 'Block)
+                      (decorate :inputs 'DescriptorSet 0)
+                      (decorate :inputs 'Binding 0)]
         :types [(add-label (type-void) :void)
                 (add-label (type-fn :void) :3)
                 (add-label (type-float 32) :float)
                 (add-label (type-vec :float 4) :v4float)
                 (add-label (type-pointer 'Output :v4float) :_ptr_Output_v4float)
                 (add-label (variable :_ptr_Output_v4float 'Output) :FragColor)
-                (add-label (type-struct :v4float) :OurUniforms)
-                (add-label (type-pointer 'Uniform :OurUniforms) :_ptr_Uniform_OurUniforms)
-                (add-label (variable :_ptr_Uniform_OurUniforms 'Uniform) :ourUniforms)
+                (add-label (type-struct :v4float) :Inputs)
+                (add-label (type-pointer 'Uniform :Inputs) :_ptr_Uniform_Inputs)
+                (add-label (variable :_ptr_Uniform_Inputs 'Uniform) :inputs)
                 (add-label (type-int 32 1) :int)
                 (add-label (constant :int 0) :int_0)
                 (add-label (type-pointer 'Uniform :v4float) :_ptr_Uniform_v4float)]
         :fn-declarations nil
         :fn-definitions [(function :void :main 'None :3
                                    (label :5)
-                                   (add-label (access-chain :_ptr_Uniform_v4float :ourUniforms :int_0) :16)
+                                   (add-label (access-chain :_ptr_Uniform_v4float :inputs :int_0) :16)
                                    (add-label (load :v4float :16) :17)
                                    (store :FragColor :17)
                                    (return))]}))

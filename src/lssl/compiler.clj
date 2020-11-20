@@ -34,34 +34,49 @@
                 [(op/name :main "main")
                  (op/name :FragColor "FragColor")
                  (op/name :Inputs "Inputs")
-                 (op/member-name :Inputs 0 "inputs")
+                 (op/member-name :Inputs 0 "color")
                  (op/name :inputs "inputs")]}
    :annotations [(op/decorate :FragColor 'Location 0)
                  (op/member-decorate :Inputs 0 'Offset 0)
                  (op/decorate :Inputs 'Block)
                  (op/decorate :inputs 'DescriptorSet 0)
                  (op/decorate :inputs 'Binding 0)]
-   :types [(op/add-label (op/type-void) :void)
-           (op/add-label (op/type-float 32) :float)
-           (op/add-label (op/type-vec :float 4) :v4float)
-           (op/add-label (op/type-pointer 'Output :v4float) :_ptr_Output_v4float)
-           (op/add-label (op/variable :_ptr_Output_v4float 'Output) :FragColor)
-           (op/add-label (op/type-struct :v4float) :OurUniforms)
-           (op/add-label (op/type-pointer 'Uniform :OurUniforms) :_ptr_Uniform_OurUniforms)
-           (op/add-label (op/variable :_ptr_Uniform_OurUniforms 'Uniform) :ourUniforms)
-           (op/add-label (op/type-int 32 1) :int)
-           (op/add-label (op/constant :int 0) :int_0)
-           (op/add-label (op/type-pointer 'Uniform :v4float) :_ptr_Uniform_v4float)]
+   :types [(op/add-label (op/type-void) :void)]
    :fn-declarations nil
    :fn-definitions []})
 
 ; TODO: add entry point link to FragColor
 
+(defn compile-float-type
+  [symbols width]
+  (if-let [label (get-in symbols [:type-map 'float :type-label])]
+    [symbols label]
+    (let [label (keyword (str "_float_" width))
+          type-def (op/add-label (op/type-float width) label)]
+      [(-> symbols
+           (update :types #(conj % type-def))
+           (assoc-in [:type-map 'float :type-label] label))
+       label])))
+
+(defn compile-vec-type
+  [symbols type size]
+  (let [[symbols float-type-label]
+        (compile-float-type symbols 32)
+        label (keyword (str "v" size "float"))
+        type-def (op/add-label (op/type-vec float-type-label size) label)]
+    [(update symbols :types #(conj % type-def))
+     label]))
+
 (defn compile-type
   [symbols type]
-  ; FIXME: update symbols
-  (case type
-    void :void))
+  (if-let [label (get-in symbols [:type-map type :type-label])]
+    [symbols label]
+    (let [[symbols label]
+          (case type
+            void [symbols :void]
+            vec4 (compile-vec-type symbols float 4))]
+      [(assoc-in symbols [:type-map type :type-label] label)
+       label])))
 
 (defn compile-fun-type
   [symbols return-type-label]
@@ -85,7 +100,7 @@
    (keyword (str "_x_" (:n-labels symbols)))])
 
 (defn compile-reset-bang
-  [symbols {[var-name] :form
+  [symbols {[_ var-name] :form
             [_ val-ast] :args :as ast}]
   (let [[symbols compiled-val-form] (compile-expression symbols val-ast)
         [symbols val-label] (label symbols)
@@ -119,15 +134,52 @@
   [symbols var field]
   (get-field-info symbols var field :type-label))
 
+(defn compile-pointer-type
+  [symbols var field]
+  (let [label (get-pointer-type-label symbols var field)]
+    (if false
+      [symbols label]
+      (let [var-kind (get-var-info symbols var :kind)
+            field-type-label (get-field-info symbols var field :type-label)
+            label (keyword (str "_ptr_" var-kind "_" (name field-type-label)))
+            ptr-type (op/add-label (op/type-pointer var-kind field-type-label) label)]
+        [(update symbols :types #(conj % ptr-type))
+         label]))))
+
+(defn compile-type-int
+  [symbols sym width signed]
+  (let [label (get-in symbols [:type-map sym :type-label])]
+    (if label
+      [symbols label]
+      (let [label :int
+            type (op/add-label (op/type-int width signed) label)]
+        [(-> symbols
+             (update :types #(conj % type))
+             (assoc-in [:type-map sym :type-label] label))
+         label]))))
+
+(defn compile-field-index
+  [symbols var field]
+  (let [idx (get-field-index symbols var field)
+        [symbols type-label] (compile-type-int symbols 'int 32 1)
+        label (keyword (str "int_" idx))
+        const (op/add-label (op/constant type-label idx) label)]
+    [(update symbols :types #(conj % const))
+     label]))
+
 (defn compile-getx
   [symbols
    {[_ var field] :form
     [_ key-ast] :args :as ast}]
   (let [;field (:val key-ast)
+        [symbols pointer-type-label]
+        (compile-pointer-type symbols var field)
+        [symbols field-index-label]
+        (compile-field-index symbols var field)
         [symbols val-label] (label symbols)
-        access-chain (op/access-chain (get-pointer-type-label symbols var field)
+        access-chain (op/access-chain pointer-type-label
                                       (get-var-label symbols var)
-                                      (get-field-index symbols var field))]
+                                      field-index-label)]
     [symbols
      [(op/add-label access-chain val-label)
       (op/load (get-field-type-label symbols var field) val-label)]]))
@@ -156,7 +208,7 @@
   [symbols
    {[_ return-type name] :form
     [_ _ args-ast & body-ast] :args :as ast}]
-  (let [return-type-label (compile-type symbols return-type)
+  (let [[symbols return-type-label] (compile-type symbols return-type)
         [symbols fun-type-label] (compile-fun-type symbols return-type-label)
         [symbols compiled-body] (compile-body symbols name body-ast)
         fn-def (apply op/function return-type-label (keyword name)
@@ -165,27 +217,10 @@
                       compiled-body)]
     (update symbols :fn-definitions #(conj % fn-def))))
 
-(defn compile-float-type
-  [symbols width]
-  (let [label (keyword (str "_float_" width))
-        type-def (op/add-label (op/type-float width) label)]
-    [(update symbols :types #(conj % type-def))
-     label]))
-
-(defn compile-vec-type
-  [symbols type size]
-  (let [[symbols float-type-label]
-        (compile-float-type symbols 32)
-        label (keyword (str "v" size "float"))
-        type-def (op/add-label (op/type-vec float-type-label size) label)]
-    [(update symbols :types #(conj % type-def))
-     label]))
-
 (defn compile-field-type
   [symbols type index path]
   (let [[symbols label]
-        (case type
-          vec4 (compile-vec-type symbols float 4))]
+        (compile-type symbols type)]
     [(-> symbols
          (assoc-in (concat [:type-map] path [:type-label]) label)
          (assoc-in (concat [:type-map] path [:index]) index))
@@ -222,14 +257,30 @@
     (-> symbols
         (update :types #(vec (concat % [pointer-def var-def])))
         (assoc-in [:globals-map var] {:label var-label
-                                      :type struct-name}))))
+                                      :type struct-name
+                                      :kind 'Uniform}))))
+
+(defn compile-defout
+  [symbols
+   {[_ var type metadata] :form :as ast}]
+  (let [[symbols type-label]
+        (compile-type symbols type)
+        ptr-label (keyword (str "_ptr_Output_" (name type-label)))
+        pointer-def (op/add-label (op/type-pointer 'Output type-label) ptr-label)
+        var-label (keyword var)
+        var-def (op/add-label (op/variable ptr-label 'Output) var-label)]
+    (-> symbols
+        (update :types #(vec (concat % [pointer-def var-def])))
+        (assoc-in [:globals-map var] {:label var-label
+                                      :type type
+                                      :kind 'Output}))))
 
 (defn dispatch-custom
   [symbols
    {:keys [form] :as ast}]
   (case (first form)
     defversion symbols #_(compile-defversion (rest form))
-    defout symbols
+    defout (compile-defout symbols ast)
     defuniform (compile-defuniform symbols ast)  #_"TODO: impl all of these"
     defun (compile-defun symbols ast)
                                         ;TODO: does this belong here reset! (compile-reset-bang symbols ast)
@@ -237,7 +288,6 @@
 
                                         ; TODO: maybe we need to be dynamic like mage and avoid multimethods, let's seen
 (defmulti compile (fn [_ ast] (class ast)))
-
 
 (defmethod compile
   clojure.lang.IPersistentCollection
@@ -263,23 +313,25 @@
   (-> source
       analyse
       sym
-      #_lssl/emit))
+      op/emit))
 
 (comment
-  (def lssl-src
-    '[(defversion 460 core)
+  (do
+    (def lssl-src
+      '[(defversion 460 core)
 
-      (defout FragColor vec4
-        {:layout {:location 0}})
+        (defout FragColor vec4
+          {:layout {:location 0}})
 
-      (defuniform inputs Inputs
-        {:layout {:memory :std140
-                  :binding 0}}
-        (color vec4))
+        (defuniform inputs Inputs
+          {:layout {:memory :std140
+                    :binding 0}}
+          (color vec4))
 
-      (defun void main []
-        (reset! FragColor (getx inputs color)))])
+        (defun void main []
+          (reset! FragColor (getx inputs color)))])
 
-  (lsslc lssl-src)
+    (spit "resources/shaders/lssl.frag.spv.asm"
+          (lsslc lssl-src)))
 
   )
