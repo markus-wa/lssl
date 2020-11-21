@@ -1,5 +1,7 @@
 (ns cider-nrepl)
 
+; REPL for MAC-OS due to weird behaviour with CIDER and OpenGL
+
 (defn -main
   []
   (.start (Thread. (fn []

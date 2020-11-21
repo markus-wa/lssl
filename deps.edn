@@ -1,15 +1,16 @@
 {:paths ["src" "resources"]
  :deps
- {lwjgl/lwjgl {:local/root "./lwjgl"}
-  org.clojure/tools.analyzer.jvm {:mvn/version "1.0.0"}
+ {org.clojure/tools.analyzer.jvm {:mvn/version "1.0.0"}
   org.clojure/tools.cli {:mvn/version "1.0.194"}}
  :aliases
  {:lwjgl/deps
-  {:extra-paths ["lwjgl/dev"]
+  {:extra-paths ["dev/lwjgl/src"]
    :main-opts ["-m" "deps"]}
   :dev
-  {:extra-paths ["dev" "dev/resources"]}
-  :cider-nrepl ; required for MAC-OS
+  {:extra-paths ["dev" "dev/resources"]
+   :extra-deps
+   {lwjgl/lwjgl {:local/root "./dev/lwjgl"}}}
+  :cider-nrepl ; required for MAC-OS due to weird behaviour with CIDER and OpenGL
   {:extra-paths ["dev" "dev/resources"]
    :main-opts ["-m" "cider-nrepl"]
    :extra-deps

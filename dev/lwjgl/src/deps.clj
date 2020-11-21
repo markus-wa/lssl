@@ -63,5 +63,5 @@
 
 (defn -main
   [& args]
-  (spit "lwjgl/deps.edn"
+  (spit "dev/lwjgl/deps.edn"
         (with-out-str (ppt/pprint {:deps lwjgl-deps-with-natives}))))
