@@ -1,0 +1,12 @@
+(defversion 460 core)
+
+(defout FragColor vec4
+  {:layout {:location 0}})
+
+(defuniform inputs Inputs
+  {:layout {:memory :std140
+            :binding 0}}
+  (color vec4))
+
+(defun void main []
+  (reset! FragColor (getx inputs color)))

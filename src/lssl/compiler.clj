@@ -1,13 +1,5 @@
 (ns lssl.compiler
-  (:require [lssl.opcodes :as op]
-            [clojure.tools.analyzer.jvm :as ana.jvm]))
-
-(defn analyse
-  [s-expression]
-  (ana.jvm/analyze s-expression
-                   (ana.jvm/empty-env)
-                   {:passes-opts {:validate/unresolvable-symbol-handler
-                                  (fn [a b c] nil)}}))
+  (:require [lssl.opcodes :as op]))
 
 (defn glsl-version
   [{[{:keys [form]}] :items :as _ast}]
@@ -304,39 +296,6 @@
     :vector (compile symbols (:items ast))
     :invoke (dispatch-custom symbols ast)))
 
-(defn sym
+(defn compile-ast
   [ast]
   (compile (init-symbols ast) ast))
-
-(defn lsslc
-  [source]
-  (-> source
-      analyse
-      sym
-      op/emit))
-
-(comment
-  (do
-    (require '[clojure.java.shell :as sh])
-
-    (def lssl-src
-      '[(defversion 460 core)
-
-        (defout FragColor vec4
-          {:layout {:location 0}})
-
-        (defuniform inputs Inputs
-          {:layout {:memory :std140
-                    :binding 0}}
-          (color vec4))
-
-        (defun void main []
-          (reset! FragColor (getx inputs color)))])
-
-    (let [out-file "resources/shaders/lssl.frag.spv.asm"]
-      (spit out-file
-            (lsslc lssl-src))
-
-      (sh/sh "spirv-as" out-file "-o" "resources/shaders/lssl.frag.spv")))
-
-  )
