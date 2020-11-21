@@ -16,7 +16,7 @@ To compile the file `frag.lsl` to `frag.spv.asm`, call the `lsslc` Compiler like
 
     lsslc -o frag.spv.asm frag.lsl
 
-The generated file is in human readable SPIR-V assembly representation and needs to be assembled by `spirv-as` before it can be used.
+The generated file is in human readable SPIR-V assembly representation and needs to be assembled by [`spirv-as`](https://github.com/KhronosGroup/SPIRV-Tools) before it can be used.
 
     spirv-as frag.spv.asm -o frag.spv
 
