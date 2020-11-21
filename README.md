@@ -22,7 +22,7 @@ The generated file is in human readable SPIR-V assembly representation and needs
 
 ## Example
 
-```lisp
+```clojure
 (defversion 460 core)
 
 (defout FragColor vec4
