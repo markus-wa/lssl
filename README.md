@@ -3,6 +3,9 @@
 lssl is a Lisp(y) graphics shader language that compiles to [SPIR-V](https://www.khronos.org/registry/spir-v/) assembly.
 It is inspired by GLSL and Clojure (and also written in Clojure).
 
+> :warning: **lssl is just a personal experiment at this stage and shold not be used for anything serious** :warning:
+> currently it only compiles very basic programs
+
 ## Rationale
 
 I'm not sure really at this point, maybe the power of Lisp macros could be useful for shaders.
