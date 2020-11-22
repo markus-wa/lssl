@@ -94,20 +94,20 @@
             :debug-info {:strings+sources
                          [(op/source 'GLSL 460)]
                          :names
-                         [(op/name :main "main")
-                          (op/name :FragColor "FragColor")
-                          (op/name :Inputs "Inputs")
+                         [(op/name- :main "main")
+                          (op/name- :FragColor "FragColor")
+                          (op/name- :Inputs "Inputs")
                           (op/member-name :Inputs 0 "color")
-                          (op/name :inputs "inputs")]}
+                          (op/name- :inputs "inputs")]}
             :annotations [(op/decorate :FragColor 'Location 0)
                           (op/member-decorate :Inputs 0 'Offset 0)
                           (op/decorate :Inputs 'Block)
                           (op/decorate :inputs 'DescriptorSet 0)
                           (op/decorate :inputs 'Binding 0)]
             :types [(op/add-label (op/type-void) :void)
-                    (op/add-label (op/type-fn :void) :3)
+                    (op/add-label (op/type-function :void) :3)
                     (op/add-label (op/type-float 32) :float)
-                    (op/add-label (op/type-vec :float 4) :v4float)
+                    (op/add-label (op/type-vector :float 4) :v4float)
                     (op/add-label (op/type-pointer 'Output :v4float) :_ptr_Output_v4float)
                     (op/add-label (op/variable :_ptr_Output_v4float 'Output) :FragColor)
                     (op/add-label (op/type-struct :v4float) :Inputs)

@@ -23,11 +23,11 @@
    :debug-info {:strings+sources
                 [(op/source 'GLSL (glsl-version ast))]
                 :names
-                [(op/name :main "main")
-                 (op/name :FragColor "FragColor")
-                 (op/name :Inputs "Inputs")
+                [(op/name- :main "main")
+                 (op/name- :FragColor "FragColor")
+                 (op/name- :Inputs "Inputs")
                  (op/member-name :Inputs 0 "color")
-                 (op/name :inputs "inputs")]}
+                 (op/name- :inputs "inputs")]}
    :annotations [(op/decorate :FragColor 'Location 0)
                  (op/member-decorate :Inputs 0 'Offset 0)
                  (op/decorate :Inputs 'Block)
@@ -55,7 +55,7 @@
   (let [[symbols float-type-label]
         (compile-float-type symbols 32)
         label (keyword (str "v" size "float"))
-        type-def (op/add-label (op/type-vec float-type-label size) label)]
+        type-def (op/add-label (op/type-vector float-type-label size) label)]
     [(update symbols :types #(conj % type-def))
      label]))
 
@@ -73,7 +73,7 @@
 (defn compile-fun-type
   [symbols return-type-label]
   (let [label (keyword (str "fn_" (name return-type-label)))
-        type-def (op/add-label (op/type-fn return-type-label) label)
+        type-def (op/add-label (op/type-function return-type-label) label)
         symbols (update symbols :types #(conj % type-def))]
     [symbols label]))
 
