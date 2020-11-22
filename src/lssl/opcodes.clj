@@ -50,19 +50,15 @@
             [type-function OpTypeFunction [return-type & params]]
             [type-float OpTypeFloat [width]]
             [type-vector OpTypeVector [component-label size]]
-            [type-variable OpVariable [type-label storage-class]]
+            [variable OpVariable [type-label storage-class]]
             [type-struct OpTypeStruct [& member-type-labels]]
             [type-pointer OpTypePointer [storage-class type]]
             [type-int OpTypeInt [width signedness]]
             [constant OpConstant [type-label & values]]
             [access-chain OpAccessChain [result-type base & indices]]
+            [function OpFunction [result-type function-control fn-type-label]]
+            [function-end OpFunctionEnd []]
             [return OpReturn []]))
-
-(defn function
-  [result-type name function-control fn-type & body]
-  (concat [(add-label (opcode 'OpFunction result-type function-control fn-type) name)]
-          body
-          [(opcode 'OpFunctionEnd)]))
 
 (defn label
   [label]

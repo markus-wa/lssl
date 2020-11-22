@@ -39,6 +39,12 @@
 
 ; TODO: add entry point link to FragColor
 
+(defn compile-function
+  [result-type name function-control fn-type & body]
+  (concat [(op/add-label (op/function result-type function-control fn-type) name)]
+          body
+          [(op/function-end)]))
+
 (defn compile-float-type
   [symbols width]
   (if-let [label (get-in symbols [:type-map 'float :type-label])]
@@ -203,7 +209,7 @@
   (let [[symbols return-type-label] (compile-type symbols return-type)
         [symbols fun-type-label] (compile-fun-type symbols return-type-label)
         [symbols compiled-body] (compile-body symbols name body-ast)
-        fn-def (apply op/function return-type-label (keyword name)
+        fn-def (apply compile-function return-type-label (keyword name)
                       (compile-args symbols args-ast)
                       fun-type-label
                       compiled-body)]

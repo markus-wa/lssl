@@ -7,11 +7,13 @@
   {:extra-paths ["dev/lwjgl/src"]
    :main-opts ["-m" "deps"]}
   :dev
-  {:extra-paths ["dev" "dev/resources"]
+  {:extra-paths ["dev" "dev/resources"
+                 "test" "test/resources"]
    :extra-deps
    {lwjgl/lwjgl {:local/root "./dev/lwjgl"}}}
   :cider-nrepl ; required for MAC-OS due to weird behaviour with CIDER and OpenGL
-  {:extra-paths ["dev" "dev/resources"]
+  {:extra-paths ["dev" "dev/resources"
+                 "test" "test/resources"]
    :main-opts ["-m" "cider-nrepl"]
    :extra-deps
    {cider/cider-nrepl {:mvn/version "0.25.4"}}}
