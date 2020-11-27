@@ -120,6 +120,6 @@
 
       (sh/sh "spirv-as" out-file "-o" "dev/resources/shaders/lssl.frag.spv")))
 
-  (-main "dev/resources/shaders/lssl.frag.lssl")
+  (-main "test/resources/shaders/test.frag.lssl")
 
 )

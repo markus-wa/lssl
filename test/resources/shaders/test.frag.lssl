@@ -9,4 +9,4 @@
   (color vec4))
 
 (defun void main []
-  (reset! FragColor (getx inputs color)))
+  (reset! FragColor (get inputs color)))

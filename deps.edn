@@ -11,6 +11,10 @@
                  "test" "test/resources"]
    :extra-deps
    {lwjgl/lwjgl {:local/root "./dev/lwjgl"}}}
+  :test
+  {:extra-paths ["test" "test/resources"]
+   :extra-deps {lambdaisland/kaocha {:mvn/version "1.0.732"}}
+   :main-opts ["-m" "kaocha.runner"]}
   :cider-nrepl ; required for MAC-OS due to weird behaviour with CIDER and OpenGL
   {:extra-paths ["dev" "dev/resources"
                  "test" "test/resources"]
