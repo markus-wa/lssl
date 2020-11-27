@@ -34,7 +34,7 @@ The generated file is in human readable SPIR-V assembly representation and needs
   (color vec4))
 
 (defun void main []
-  (reset! FragColor (getx inputs color)))
+  (reset! FragColor (get inputs color)))
 ```
 
 ## Development
