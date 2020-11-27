@@ -165,9 +165,9 @@
     [(update symbols :types #(conj % const))
      label]))
 
-(defn compile-getx
+(defn compile-get
   [symbols
-   {[_ var field] :form
+   {[[_ var field]] :raw-forms
     [_ key-ast] :args :as ast}]
   (let [;field (:val key-ast)
         [symbols pointer-type-label]
@@ -185,13 +185,18 @@
 (defn dispatch-custom-expression
   [symbols {:keys [form] :as ast}]
   (case (first form)
-    reset! (compile-reset-bang symbols ast)
-    getx   (compile-getx symbols ast)))
+    reset! (compile-reset-bang symbols ast)))
+
+(defn dispatch-static-call
+  [symbols ast]
+  (case (:method ast)
+    get (compile-get symbols ast)))
 
 (defn compile-expression
   [symbols ast]
   (case (:op ast)
-    :invoke (dispatch-custom-expression symbols ast)))
+    :invoke (dispatch-custom-expression symbols ast)
+    :static-call (dispatch-static-call symbols ast)))
 
 (defn compile-body
   [symbols name instruction-asts]

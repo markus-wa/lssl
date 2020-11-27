@@ -112,7 +112,7 @@
           (color vec4))
 
         (defun void main []
-          (reset! FragColor (getx inputs color)))])
+          (reset! FragColor (get inputs color)))])
 
     (let [out-file "dev/resources/shaders/lssl.frag.spv.asm"]
       (spit out-file
