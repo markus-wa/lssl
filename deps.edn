@@ -8,9 +8,11 @@
    :main-opts ["-m" "deps"]}
   :dev
   {:extra-paths ["dev" "dev/resources"
-                 "test" "test/resources"]
+                 "test" "test/resources"
+                 "target/resources"]
    :extra-deps
-   {lwjgl/lwjgl {:local/root "./dev/lwjgl"}}}
+   {lwjgl/lwjgl {:local/root "./dev/lwjgl"}
+    juxt/dirwatch {:mvn/version "0.2.5"}}}
   :test
   {:extra-paths ["test" "test/resources"]
    :extra-deps {lambdaisland/kaocha {:mvn/version "1.0.732"}}

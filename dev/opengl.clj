@@ -1,6 +1,7 @@
 (ns opengl
   (:require [clojure.string :as str]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [util :refer [with-watcher]])
   (:import (java.nio ByteBuffer FloatBuffer IntBuffer)
            (org.lwjgl BufferUtils)
            (org.lwjgl.glfw GLFW GLFWErrorCallback)
@@ -56,7 +57,7 @@
     (ok? #(GL33/glGetProgrami %1 %2) GL33/GL_LINK_STATUS #(GL33/glGetProgramInfoLog %) program)
     program))
 
-(defn shader-program
+(defn ->shader-program
   [vs-source fs-source]
   (let [vs (->vertex-shader vs-source)
         fs (->fragment-shader fs-source)
@@ -124,9 +125,10 @@
     (GL33/glBindBufferBase GL33/GL_UNIFORM_BUFFER 0 bo)
     bo))
 
+(def shader-program (atom nil))
 
 (defn go
-  [vs fs]
+  [load-vs load-fs]
   (with-glfw
     (GLFW/glfwDefaultWindowHints)
     (GLFW/glfwWindowHint GLFW/GLFW_CONTEXT_VERSION_MAJOR 4)
@@ -145,25 +147,31 @@
         (GL/createCapabilities)
         (println "OpenGL version:" (GL11/glGetString GL11/GL_VERSION))
 
-        (let [shader-program (shader-program vs fs)
+        (let [shader-program (atom nil)
+              shader-source-changed (atom true)
               vao (setup-vao)
               db (setup-data-buffer)]
-          (while (not (GLFW/glfwWindowShouldClose window))
-            (GL33/glClearColor 0.2 0.3 0.3 1.0)
-            (GL33/glClear GL33/GL_COLOR_BUFFER_BIT)
+          (with-watcher (fn [_] (reset! shader-source-changed true)) (io/file (io/resource "shaders"))
+            (while (not (GLFW/glfwWindowShouldClose window))
+              (when @shader-source-changed
+                (reset! shader-source-changed false)
+                (reset! shader-program (->shader-program (load-vs) (load-fs))))
 
-            (GL33/glUseProgram shader-program)
+              (GL33/glClearColor 0.2 0.3 0.3 1.0)
+              (GL33/glClear GL33/GL_COLOR_BUFFER_BIT)
 
-            (let [time (GLFW/glfwGetTime)
-                  green-value (+ (/ (Math/sin time) 2.0) 0.5)
-                  data [0.0 green-value 0.0]
-                  data-buf (-> (BufferUtils/createFloatBuffer (count data)) ; TODO: inefficient
-                               (.put (float-array data))
-                               (.flip))]
-              (GL33/glBindBuffer GL33/GL_UNIFORM_BUFFER db)
-              (GL33/glBufferSubData GL33/GL_UNIFORM_BUFFER 0 ^FloatBuffer data-buf))
+              (GL33/glUseProgram @shader-program)
 
-            (GL33/glDrawArrays GL33/GL_TRIANGLES 0 3)
+              (let [time (GLFW/glfwGetTime)
+                    green-value (+ (/ (Math/sin time) 2.0) 0.5)
+                    data [0.0 green-value 0.0]
+                    data-buf (-> (BufferUtils/createFloatBuffer (count data)) ; TODO: inefficient
+                                 (.put (float-array data))
+                                 (.flip))]
+                (GL33/glBindBuffer GL33/GL_UNIFORM_BUFFER db)
+                (GL33/glBufferSubData GL33/GL_UNIFORM_BUFFER 0 ^FloatBuffer data-buf))
 
-            (GLFW/glfwSwapBuffers window)
-            (GLFW/glfwPollEvents)))))))
+              (GL33/glDrawArrays GL33/GL_TRIANGLES 0 3)
+
+              (GLFW/glfwSwapBuffers window)
+              (GLFW/glfwPollEvents))))))))
