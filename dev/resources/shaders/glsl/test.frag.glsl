@@ -9,5 +9,5 @@ layout (std140, binding = 0) uniform Inputs
 
 void main()
 {
-  FragColor = inputs.color;
+  FragColor = vec4(1.0, 1.0, inputs.color.g, 1.0);
 }

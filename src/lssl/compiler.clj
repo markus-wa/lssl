@@ -7,6 +7,7 @@
     (second form)
     (throw (RuntimeException. "first statement must be GLSL version"))))
 
+
 (defn init-symbols
   [ast]
   {:n-labels 0
@@ -37,7 +38,7 @@
    :fn-declarations nil
    :fn-definitions []})
 
-; TODO: add entry point link to FragColor
+;; TODO: add entry point link to FragColor
 
 (defn compile-function
   [result-type name function-control fn-type & body]
@@ -165,12 +166,16 @@
     [(update symbols :types #(conj % const))
      label]))
 
+(defn compile-get-in
+  [symbols ast]
+  #p ast
+  nil)
+
 (defn compile-get
   [symbols
    {[[_ var field]] :raw-forms
     [_ key-ast] :args :as ast}]
-  (let [;field (:val key-ast)
-        [symbols pointer-type-label]
+  (let [[symbols pointer-type-label]
         (compile-pointer-type symbols var field)
         [symbols field-index-label]
         (compile-field-index symbols var field)
@@ -182,10 +187,27 @@
      [(op/add-label access-chain val-label)
       (op/load (get-field-type-label symbols var field) val-label)]]))
 
+(defn compile-vec-vals
+  [size symbols ast]
+  #p ast
+  nil)
+
+(defn compile-vec
+  [size symbols ast]
+  (let [[symbols type-label]
+        (compile-type symbols (symbol (str "vec" size)))
+        [symbols val-labels]
+        (compile-vec-vals size symbols ast)
+        composite-construct-label
+        (apply op/composite-construct type-label val-labels)]
+    [symbols
+     [composite-construct-label]]))
+
 (defn dispatch-custom-expression
   [symbols {:keys [form] :as ast}]
   (case (first form)
-    reset! (compile-reset-bang symbols ast)))
+    vec4 (compile-vec 4 symbols ast)
+    get-in (compile-get-in symbols ast)))
 
 (defn dispatch-static-call
   [symbols ast]
@@ -198,10 +220,25 @@
     :invoke (dispatch-custom-expression symbols ast)
     :static-call (dispatch-static-call symbols ast)))
 
+(defn dispatch-custom-statement
+  [symbols {:keys [form] :as ast}]
+  (case (first form)
+    reset! (compile-reset-bang symbols ast)))
+
+(defn dispatch-static-call-statement
+  [symbols ast]
+  (throw (RuntimeException. "unimplemented")))
+
+(defn compile-statement
+  [symbols ast]
+  (case (:op ast)
+    :invoke (dispatch-custom-statement symbols ast)
+    :static-call (dispatch-static-call-statement symbols ast)))
+
 (defn compile-body
   [symbols name instruction-asts]
   (let [[symbols compiled-instructions]
-        (reduce #(compile-expression (first %1) %2) [symbols []] instruction-asts)]
+        (reduce #(compile-statement (first %1) %2) [symbols []] instruction-asts)]
     [symbols
      (concat [(op/label (keyword (str "_" name "_entrypoint")))]
              compiled-instructions
@@ -239,7 +276,7 @@
 
 (defn compile-struct
   [symbols name fields]
-  (let [path [name] ; FIXME: deep nesting
+  (let [path [name] ;; FIXME: deep nesting
         [symbols field-type-labels]
         (reduce (partial compile-struct-fields-reducer path) [symbols [] 0] fields)
         label (keyword name)
@@ -282,14 +319,14 @@
   [symbols
    {:keys [form] :as ast}]
   (case (first form)
-    defversion symbols #_(compile-defversion (rest form))
+    defversion symbols
     defout (compile-defout symbols ast)
-    defuniform (compile-defuniform symbols ast)  #_"TODO: impl all of these"
+    defuniform (compile-defuniform symbols ast)  ;; TODO: impl all of these
     defun (compile-defun symbols ast)
-                                        ;TODO: does this belong here reset! (compile-reset-bang symbols ast)
+    ;; TODO: does this belong here? - reset! (compile-reset-bang symbols ast)
     ))
 
-                                        ; TODO: maybe we need to be dynamic like mage and avoid multimethods, let's seen
+;; TODO: maybe we need to be dynamic like mage and avoid multimethods, let's seen
 (defmulti compile (fn [_ ast] (class ast)))
 
 (defmethod compile

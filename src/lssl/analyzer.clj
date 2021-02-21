@@ -8,10 +8,10 @@
   (ana.jvm/analyze s-expression
                    (ana.jvm/empty-env)
                    {:passes-opts {:validate/unresolvable-symbol-handler
-                                  (fn [a b c] nil)}}))
+                                  (fn [_ _ _] nil)}}))
 
 (comment
-  (defn analyze [form env]
+  (defn analyze- [form env]
     (binding [ana/macroexpand-1 macroexpand-1
               ana/create-var    create-var
               ana/parse         parse

@@ -38,10 +38,6 @@
     #(write-file output %)
     #(.write *out* %)))
 
-(defn- write-output
-  [target output]
-  (.write target output))
-
 (def cli-options
   [["-h" "--help"]
    ["-o" "--output PATH" "Target output file for SPIR-V assembly"]])
@@ -55,7 +51,7 @@
         options-summary
         ""
         "For more info, see:"
-        " https://github.com/markus-wa/lssl"]
+        "https://github.com/markus-wa/lssl"]
        (str/join \newline)))
 
 (defn- error-msg [errors]
@@ -114,11 +110,11 @@
         (defun void main []
           (reset! FragColor (get inputs color)))])
 
-    (let [out-file "dev/resources/shaders/lssl.frag.spv.asm"]
+    (let [out-file "target/spv/lssl.frag.spv.asm"]
       (spit out-file
             (lsslc lssl-src))
 
-      (sh/sh "spirv-as" out-file "-o" "dev/resources/shaders/lssl.frag.spv")))
+      (sh/sh "spirv-as" out-file "-o" "target/resources/shaders/lssl/example.frag.spv")))
 
   (-main "test/resources/shaders/test.frag.lssl")
 

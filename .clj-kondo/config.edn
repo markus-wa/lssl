@@ -1,0 +1,28 @@
+{:lint-as
+ {lssl.opcodes/defop clj-kondo.lint-as/def-catch-all
+  lssl.opcodes/run-macro clj-kondo.lint-as/def-catch-all}
+ :linters
+ {:unresolved-var
+  {:exclude [lssl.opcodes/capability
+             lssl.opcodes/ext-inst-imports
+             lssl.opcodes/memory-model
+             lssl.opcodes/entry-point
+             lssl.opcodes/execution-mode
+             lssl.opcodes/source
+             lssl.opcodes/name-
+             lssl.opcodes/member-name
+             lssl.opcodes/decorate
+             lssl.opcodes/member-decorate
+             lssl.opcodes/type-void
+             lssl.opcodes/type-function
+             lssl.opcodes/type-float
+             lssl.opcodes/type-vector
+             lssl.opcodes/variable
+             lssl.opcodes/type-struct
+             lssl.opcodes/type-pointer
+             lssl.opcodes/type-int
+             lssl.opcodes/constant
+             lssl.opcodes/access-chain
+             lssl.opcodes/function
+             lssl.opcodes/function-end
+             lssl.opcodes/return]}}}
