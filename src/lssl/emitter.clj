@@ -1,7 +1,6 @@
 (ns lssl.emitter
   (:require [clojure.string :as str]))
 
-
 (defn- emit-comment
   [text]
   (str "; " text))

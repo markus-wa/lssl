@@ -105,10 +105,11 @@
         (defuniform inputs Inputs
           {:layout {:memory :std140
                     :binding 0}}
-          (color vec4))
+          [:color vec4
+           :other vec4])
 
         (defun void main []
-          (reset! FragColor (get inputs color)))])
+          (reset! FragColor (vec4 1.0 1.0 (get-in inputs [:color :g]) 1.0)))])
 
     (let [out-file "target/spv/lssl.frag.spv.asm"]
       (spit out-file
@@ -116,6 +117,4 @@
 
       (sh/sh "spirv-as" out-file "-o" "target/resources/shaders/lssl/example.frag.spv")))
 
-  (-main "test/resources/shaders/test.frag.lssl")
-
-)
+  (-main "test/resources/shaders/test.frag.lssl"))

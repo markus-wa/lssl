@@ -25,4 +25,5 @@
              lssl.opcodes/access-chain
              lssl.opcodes/function
              lssl.opcodes/function-end
-             lssl.opcodes/return]}}}
+             lssl.opcodes/return
+             lssl.opcodes/composite-construct]}}}

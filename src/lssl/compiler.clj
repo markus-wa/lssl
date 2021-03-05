@@ -157,6 +157,17 @@
              (assoc-in [:type-map sym :type-label] label))
          label]))))
 
+(defn compile-const
+  [symbols
+   {:keys [tag val]}]
+  (if (isa? tag Double)
+    (let [[symbols type-label] (compile-float-type symbols 32)
+          label (keyword (str "float_" val))
+          const (op/add-label (op/constant type-label val) label)]
+      [(update symbols :types #(conj % const))
+       label])
+    (throw (RuntimeException. "not implemented"))))
+
 (defn compile-field-index
   [symbols var field]
   (let [idx (get-field-index symbols var field)
@@ -169,7 +180,7 @@
 (defn compile-get-in
   [symbols ast]
   #p ast
-  nil)
+  [symbols [] #_label])
 
 (defn compile-get
   [symbols
@@ -187,21 +198,36 @@
      [(op/add-label access-chain val-label)
       (op/load (get-field-type-label symbols var field) val-label)]]))
 
+;; FIXME: check size against args len
 (defn compile-vec-vals
-  [size symbols ast]
-  #p ast
-  nil)
+  [size symbols
+   {:keys [args] :as ast}]
+  (loop [symbols symbols
+         args args
+         expressions []
+         val-labels []]
+    (if (empty? args)
+      [symbols val-labels]
+      (let [[symbols exp val-label]
+            (compile-expression symbols (first args))]
+        (recur symbols
+               (rest args)
+               (concat expressions exp)
+               (conj val-labels val-label))))))
 
 (defn compile-vec
   [size symbols ast]
   (let [[symbols type-label]
         (compile-type symbols (symbol (str "vec" size)))
-        [symbols val-labels]
+        [symbols val-expressions val-labels]
         (compile-vec-vals size symbols ast)
-        composite-construct-label
-        (apply op/composite-construct type-label val-labels)]
+        composite-construct
+        (apply op/composite-construct type-label val-labels)
+        [symbols val-label] (label symbols)]
     [symbols
-     [composite-construct-label]]))
+     (conj val-expressions
+           composite-construct)
+     (op/add-label composite-construct val-label)]))
 
 (defn dispatch-custom-expression
   [symbols {:keys [form] :as ast}]
@@ -218,7 +244,8 @@
   [symbols ast]
   (case (:op ast)
     :invoke (dispatch-custom-expression symbols ast)
-    :static-call (dispatch-static-call symbols ast)))
+    :static-call (dispatch-static-call symbols ast)
+    :const (compile-const symbols ast)))
 
 (defn dispatch-custom-statement
   [symbols {:keys [form] :as ast}]
@@ -278,7 +305,7 @@
   [symbols name fields]
   (let [path [name] ;; FIXME: deep nesting
         [symbols field-type-labels]
-        (reduce (partial compile-struct-fields-reducer path) [symbols [] 0] fields)
+        (reduce (partial compile-struct-fields-reducer path) [symbols [] 0] (partition 2 fields))
         label (keyword name)
         struct-def (op/add-label (apply op/type-struct field-type-labels) label)]
     [(update symbols :types #(conj % struct-def))
@@ -286,7 +313,7 @@
 
 (defn compile-defuniform
   [symbols
-   {[_ var struct-name metadata & fields] :form
+   {[_ var struct-name metadata fields] :form
     [_ _] :args :as ast}]
   (let [[symbols struct-label]
         (compile-struct symbols struct-name fields)
